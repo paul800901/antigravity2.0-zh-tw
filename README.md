@@ -1,8 +1,8 @@
 # Antigravity 2.0 繁體中文套件
 
-將 Antigravity 2.0 的介面翻譯為繁體中文。請安裝最新版本 v1.0.3，以符合 Antigravity 2.0 官方最新介面。支援 Windows 與 macOS，提供一鍵安裝與完整還原。
+將 Antigravity 2.0 的介面翻譯為台灣繁體中文。v1.1.0 已在 Windows 與 Antigravity 2.11.0 完成實機驗證，提供本機安裝、備份與還原功能。
 
-Antigravity 2.0 Traditional Chinese Localization Toolkit is an open-source project that translates the Antigravity 2.0 interface into Traditional Chinese. It works by unpacking and repacking the local Electron ASAR file, without modifying official core binaries or redistributing any official Antigravity files. The toolkit supports both Windows and macOS, provides one-click installation and full restoration, automatically creates backups, runs entirely on the user’s local machine, and carefully avoids translating code editors, terminals, input fields, debug consoles, and other areas where localization could interfere with development workflows.
+Antigravity 2.0 Traditional Chinese Localization Toolkit is an open-source, community-maintained project for Taiwan Traditional Chinese. It unpacks and repacks the local Electron ASAR file without redistributing official Antigravity files. Translation is limited to recognized interface strings; user messages, assistant responses, editable values, code, terminals, and debug output are excluded. Version 1.1.0 was tested on Antigravity 2.11.0 for Windows.
 
 ---
 
@@ -10,54 +10,44 @@ Antigravity 2.0 Traditional Chinese Localization Toolkit is an open-source proje
 
 **Antigravity 2.0 繁體中文套件**是一套開源的介面本地化工具，透過 ASAR 解包與重新打包機制，將 Antigravity 2.0 的英文介面翻譯為繁體中文。
 
-為確保翻譯內容與 Antigravity 2.0 官方最新介面一致，建議安裝本套件最新版本 v1.0.3。
+目前驗證基準為 **Antigravity 2.11.0（Windows）**。官方軟體更新後，請先確認相容性再重新安裝本套件。
 
 - 不修改官方核心二進位檔案
 - 不散布官方 `app.asar` 或任何官方檔案
 - 支援一鍵安裝與完整還原
 - 所有操作在使用者本機端執行
+- 僅翻譯明確的介面詞句，不對任意內容做片段取代
+- 保護使用者訊息、Agent 回應、程式碼、終端機與可編輯內容
+
+> 本專案為社群維護的非官方工具，與 Google 或 Antigravity 官方團隊無關。
 
 ---
 
-## 使用畫面
+## 畫面與驗證
 
-### 主介面
-
-![Antigravity 2.0 繁體中文主介面](images/screenshot-main-ui.JPG)
-
-### 設定頁
-
-![Antigravity 2.0 繁體中文設定頁](images/screenshot-settings.JPG)
+v1.1.0 已完成 Windows 實機啟動、主介面及設定頁詞句讀回。`images/` 內為舊版歷史畫面，不代表目前 v1.1.0 的最終詞句。
 
 ---
 
 ## 下載方式
 
-### 方式一：GitHub Releases（推薦）
+### 方式一：下載原始碼 ZIP
 
-前往本專案的 [GitHub Releases](../../releases) 頁面，下載最新版本的 `.zip` 壓縮檔。
-
-1. 下載 `antigravity2-zh-hant-v*.zip`
-2. 解壓縮到任意目錄
-3. 在解壓縮後的目錄中執行：
+在 GitHub 專案頁按下 **Code → Download ZIP**，解壓縮後於專案目錄執行：
 
 ```bash
 npm install
 ```
 
-> ⚠️ **注意**：請下載完整的 `.zip` 檔案，不要只下載單一的 `.bat` 或 `.command` 檔案。安裝腳本需要搭配 `localization_engine.js`、`dicts/` 字典目錄與 `package.json` 等檔案才能正常運作。
-
-> ⚠️ **注意**：Releases zip 中不包含 `node_modules/`，因此解壓縮後仍需執行 `npm install` 安裝依賴套件。
+> ⚠️ 請下載完整專案，不要只下載單一 `.bat` 或 `.command` 檔。ZIP 不含 `node_modules/`，首次使用仍須執行 `npm install`。
 
 ### 方式二：Git Clone
 
 ```bash
-git clone https://github.com/<owner>/antigravity2.0-zh-tw.git
-cd antigravity2-zh-hant-tw
+git clone https://github.com/paul800901/antigravity2.0-zh-tw.git
+cd antigravity2.0-zh-tw
 npm install
 ```
-
-> 請將 `<owner>` 替換為實際的 GitHub 帳號名稱。
 
 ---
 
@@ -69,7 +59,9 @@ npm install
 - 🔄 **完整還原**：隨時可還原為官方英文原版
 - 🛡️ **安全備份**：首次安裝時自動備份官方 `app.asar`
 - 📦 **離線運作**：使用本地 `@electron/asar`，不依賴 `npx` 動態下載
-- 🎯 **精準翻譯**：自動避開程式碼區、Terminal、編輯器等不應翻譯的區域
+- 🎯 **精準翻譯**：採用完整詞句比對，避免誤改一般內容
+- 🧱 **內容保護**：避開對話、Markdown、程式碼、終端機、編輯器與除錯輸出
+- 🇹🇼 **台灣用語**：針對台灣常用介面詞句進行覆寫與自動檢查
 
 ---
 
@@ -94,8 +86,8 @@ Antigravity 官方更新時，會重新覆蓋 `app.asar` 檔案，導致先前�
 
 | 平台 | 安裝 | 還原 | UI 驗證 | 備註 |
 |------|------|------|---------|------|
-| macOS | ✅ 已通過 | ✅ 已通過 | ✅ 已通過 | 實機驗證完成 |
-| Windows | ✅ 已通過 | ✅ 已通過 | ⚠️ 未驗證 | v1.0.3 尚未於 Windows 系統實機驗證 |
+| macOS | ⚠️ 未重測 | ⚠️ 未重測 | ⚠️ 未重測 | v1.1.0 尚未重新進行 macOS 實機驗證 |
+| Windows | ✅ 已通過 | ✅ 備份可用 | ✅ 已通過 | Antigravity 2.11.0 實機驗證完成 |
 
 > 翻譯範圍持續補齊中。若在使用過程中發現未翻譯的文字，歡迎回報。
 
