@@ -4,7 +4,7 @@ const child_process = require('child_process');
 
 const PROJECT_ID = 'antigravity2-zh-hant-tw';
 const PROJECT_NAME = 'Antigravity 2.0 繁體中文套件';
-const ENGINE_VERSION = '1.0.3';
+const ENGINE_VERSION = '1.1.0-tw.1';
 const SIGNATURE = 'ZH-HANT-TW';
 
 const SIGNATURE_START = '/* --- ANTIGRAVITY ZH-HANT-TW LOCALIZATION START --- */';
@@ -69,6 +69,7 @@ function checkEnvironment() {
 function normalizeText(text) {
     if (!text) return '';
     return text
+        .normalize('NFKC')
         .replace(/\s+/g, ' ')
         .trim()
         .replace(/[\u2018\u2019]/g, "'")
@@ -107,10 +108,7 @@ function loadDictionary() {
 
 function generateJs() {
     const fullDict = loadDictionary();
-    const longEntries = Object.entries(fullDict).sort((a, b) => b[0].length - a[0].length);
-
     const dictJson = JSON.stringify(fullDict, null, 4);
-    const entriesJson = JSON.stringify(longEntries);
 
     const jsSource = `${SIGNATURE_START}
 (() => {
@@ -138,7 +136,6 @@ function generateJs() {
     const lowerMap = new Map();
     for (const [k, v] of map.entries()) lowerMap.set(k.toLowerCase(), v);
 
-    const longEntries = REPLACEMENT_ENTRIES_PLACEHOLDER;
     const done = new WeakSet();
 
     const tooltipPortalSelectors = [
@@ -150,26 +147,45 @@ function generateJs() {
         '.popover-content', '.PopoverContent'
     ];
 
-    const BLOCKED_CLASSES = ['monaco-editor', 'editor-container', 'terminal', 'output-view', 'debug-console', 'code-view', 'artifact-container', 'suggest-widget'];
+    const BLOCKED_CLASSES = [
+        'monaco-editor', 'editor-container', 'terminal', 'output-view',
+        'debug-console', 'code-view', 'artifact-container', 'suggest-widget',
+        'message-content', 'chat-message', 'user-message', 'assistant-message',
+        'conversation-turn', 'rendered-markdown', 'markdown-body', 'prose'
+    ];
     const BLOCKED_TAGS = ['SCRIPT', 'STYLE', 'CODE', 'PRE', 'INPUT', 'TEXTAREA', 'SVG', 'CANVAS', 'SYMBOL', 'PATH'];
+    const FORM_CONTROL_TAGS = ['INPUT', 'TEXTAREA'];
 
     function norm(s) {
         if (!s) return '';
-        return s.replace(/\\s+/g, ' ').replace(/[\\u2018\\u2019]/g, "'").replace(/[\\u201C\\u201D]/g, '"').trim();
+        return s.normalize('NFKC').replace(/\\s+/g, ' ').replace(/[\\u2018\\u2019]/g, "'").replace(/[\\u201C\\u201D]/g, '"').trim();
     }
 
-    function isInBlockedZone(node) {
+    function isInBlockedZone(node, allowFormControlAttribute = false) {
         let curr = node.nodeType === Node.TEXT_NODE ? node.parentElement : node;
         let depth = 0;
 
         while (curr && depth < 12) {
             if (curr.nodeType === Node.ELEMENT_NODE) {
                 const tag = curr.tagName.toUpperCase();
+                const isDirectSafeAttributeTarget = allowFormControlAttribute && depth === 0 && (
+                    FORM_CONTROL_TAGS.includes(tag) || curr.getAttribute('contenteditable') === 'true'
+                );
+                if (isDirectSafeAttributeTarget) return false;
                 if (BLOCKED_TAGS.includes(tag)) return true;
                 if (curr.getAttribute('contenteditable') === 'true') return true;
 
                 const className = curr.className || '';
-                if (typeof className === 'string' && BLOCKED_CLASSES.some(cls => className.includes(cls))) {
+                if (typeof className === 'string' && BLOCKED_CLASSES.some(cls => className.toLowerCase().includes(cls))) {
+                    return true;
+                }
+
+                const contentHint = [
+                    curr.getAttribute('data-testid'),
+                    curr.getAttribute('data-role'),
+                    curr.getAttribute('data-message-id') ? 'message-id' : ''
+                ].filter(Boolean).join(' ').toLowerCase();
+                if (/(message-content|chat-message|user-message|assistant-message|conversation-turn|message-id)/.test(contentHint)) {
                     return true;
                 }
             }
@@ -193,17 +209,40 @@ function generateJs() {
             newVal = map.get(valNorm);
         } else if (lowerMap.has(valLower)) {
             newVal = lowerMap.get(valLower);
-        } else {
-            for (const [key, translated] of longEntries) {
-                if (key.length > 20 && valNorm.includes(key)) {
-                    newVal = newVal.split(key).join(translated);
-                }
-            }
         }
         if (newVal === originalVal) {
             const deleteProjectMatch = valNorm.match(/^Permanently delete (.+?) including (\\d+) active conversations? and (\\d+) archived conversations?\\.$/);
+            const thoughtDurationMatch = valNorm.match(/^Thought for (\\d+(?:\\.\\d+)?)s$/);
+            const workedDurationMatch = valNorm.match(/^Worked for (\\d+(?:\\.\\d+)?)s$/);
+            const currentModelMatch = valNorm.match(/^Select model, current: (.+)$/);
+            const compactAgeMatch = valNorm.match(/^(\\d+)(mo|s|m|h|d|w|y)$/);
+            const customizationBudgetMatch = valNorm.match(/^(\\d+(?:\\.\\d+)?)% of the customization budget is available\\.$/);
+            const quotaRefreshMatch = valNorm.match(/^You have used some of your (weekly|5-hour) limit, it will fully refresh in (\\d+) (day|days|hour|hours|minute|minutes)(?:, (\\d+) (hour|hours|minute|minutes))?\\.$/);
+            const showBreakdownsMatch = valNorm.match(/^Show (\\d+) breakdowns$/);
+            const skillsTokensMatch = valNorm.match(/^Skills: ([\\d,]+) tokens$/);
             if (deleteProjectMatch) {
                 newVal = '永久刪除 ' + deleteProjectMatch[1] + '，包括 ' + deleteProjectMatch[2] + ' 個進行中對話以及 ' + deleteProjectMatch[3] + ' 個已封存對話。';
+            } else if (thoughtDurationMatch) {
+                newVal = '思考了 ' + thoughtDurationMatch[1] + ' 秒';
+            } else if (workedDurationMatch) {
+                newVal = '處理了 ' + workedDurationMatch[1] + ' 秒';
+            } else if (currentModelMatch) {
+                newVal = '選擇模型，目前使用：' + currentModelMatch[1];
+            } else if (compactAgeMatch) {
+                const ageUnits = { s: ' 秒', m: ' 分鐘', h: ' 小時', d: ' 天', w: ' 週', mo: ' 個月', y: ' 年' };
+                newVal = compactAgeMatch[1] + ageUnits[compactAgeMatch[2]];
+            } else if (customizationBudgetMatch) {
+                newVal = '自訂項目預算尚餘 ' + customizationBudgetMatch[1] + '%。';
+            } else if (quotaRefreshMatch) {
+                const durationUnits = { day: '天', days: '天', hour: '小時', hours: '小時', minute: '分鐘', minutes: '分鐘' };
+                const limitLabel = quotaRefreshMatch[1] === 'weekly' ? '每週額度' : '五小時額度';
+                let duration = quotaRefreshMatch[2] + ' ' + durationUnits[quotaRefreshMatch[3]];
+                if (quotaRefreshMatch[4]) duration += ' ' + quotaRefreshMatch[4] + ' ' + durationUnits[quotaRefreshMatch[5]];
+                newVal = '已使用部分' + limitLabel + '；將在 ' + duration + '後全數恢復。';
+            } else if (showBreakdownsMatch) {
+                newVal = '顯示 ' + showBreakdownsMatch[1] + ' 項明細';
+            } else if (skillsTokensMatch) {
+                newVal = '技能：' + skillsTokensMatch[1] + ' 個 Token';
             } else {
                 const deleteProjectPrefixMatch = valNorm.match(/^Permanently delete (.+)$/);
                 const activeConversationsMatch = valNorm.match(/^(\\d+) active conversations?$/);
@@ -215,10 +254,6 @@ function generateJs() {
                     newVal = activeConversationsMatch[1] + ' 個進行中對話';
                 } else if (archivedConversationsMatch) {
                     newVal = archivedConversationsMatch[1] + ' 個已封存對話';
-                } else if (valNorm === 'including') {
-                    newVal = '，包括';
-                } else if (valNorm === 'and') {
-                    newVal = '以及';
                 }
             }
         }
@@ -227,19 +262,13 @@ function generateJs() {
 
     function translateAttributes(el) {
         if (!el || el.nodeType !== Node.ELEMENT_NODE) return;
-        const tag = el.tagName.toUpperCase();
-        if (BLOCKED_TAGS.includes(tag)) return;
-        if (isInBlockedZone(el)) return;
+        if (isInBlockedZone(el, true)) return;
 
         for (const attr of ['placeholder', 'title', 'aria-label']) {
             const v = el.getAttribute(attr);
             if (!v) continue;
-            const t = norm(v);
-            if (map.has(t)) {
-                el.setAttribute(attr, map.get(t));
-            } else if (lowerMap.has(t.toLowerCase())) {
-                el.setAttribute(attr, lowerMap.get(t.toLowerCase()));
-            }
+            const translated = translateString(v);
+            if (translated !== v) el.setAttribute(attr, translated);
         }
     }
 
@@ -253,20 +282,10 @@ function generateJs() {
 
     function hasTranslatableEnglishText(node) {
         if (!node) return false;
-        const text = node.textContent || '';
+        const text = norm(node.textContent || '');
         if (!text) return false;
-        
-        for (const [key, translated] of map.entries()) {
-            if (key.length >= 3 && key !== translated && text.includes(key)) {
-                return true;
-            }
-        }
-        for (const [key, translated] of longEntries) {
-            if (key.length >= 3 && key !== translated && text.includes(key)) {
-                return true;
-            }
-        }
-        return false;
+        const translated = translateString(text);
+        return typeof translated === 'string' && translated !== text;
     }
 
     function translateTooltipNodeWithReadyCheck(node, attempt = 1) {
@@ -413,7 +432,7 @@ function generateJs() {
                 translateNode(m.target);
             } else if (m.type === 'attributes') {
                 const el = m.target;
-                if (el && el.nodeType === Node.ELEMENT_NODE && !isInBlockedZone(el)) {
+                if (el && el.nodeType === Node.ELEMENT_NODE && !isInBlockedZone(el, true)) {
                     const attr = m.attributeName;
                     if (attr === 'title' || attr === 'aria-label' || attr === 'placeholder') {
                         const v = el.getAttribute(attr);
@@ -460,7 +479,7 @@ function generateJs() {
     const origSetAttribute = Element.prototype.setAttribute;
     Element.prototype.setAttribute = function(name, value) {
         if (typeof value === 'string' && (name === 'title' || name === 'aria-label' || name === 'placeholder')) {
-            if (!isInBlockedZone(this) && !BLOCKED_TAGS.includes(this.tagName.toUpperCase())) {
+            if (!isInBlockedZone(this, true)) {
                 const translated = translateString(value);
                 return origSetAttribute.call(this, name, translated);
             }
@@ -487,9 +506,7 @@ function generateJs() {
 })();
 ${SIGNATURE_END}`;
 
-    return jsSource
-        .replace('DICT_PLACEHOLDER', dictJson)
-        .replace('REPLACEMENT_ENTRIES_PLACEHOLDER', entriesJson);
+    return jsSource.replace('DICT_PLACEHOLDER', dictJson);
 }
 
 function cleanJsContent(content) {
@@ -932,4 +949,17 @@ function main() {
     }
 }
 
-main();
+module.exports = {
+    normalizeText,
+    loadDictionary,
+    generateJs,
+    cleanJsContent,
+    cleanMenuJsContent,
+    cleanTrayJsContent,
+    createMenuTranslationPatch,
+    createTrayCreatePatch
+};
+
+if (require.main === module) {
+    main();
+}

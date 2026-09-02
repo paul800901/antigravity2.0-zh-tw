@@ -4,7 +4,7 @@
   "private": true,
   "description": "Antigravity 2.0 繁體中文套件",
   "scripts": {
-    "check": "node --check localization_engine.js",
+    "check": "node --check localization_engine.js && node validate-localization.js",
     "version": "node localization_engine.js --version",
     "install:localization": "node localization_engine.js",
     "restore": "node localization_engine.js --restore",
