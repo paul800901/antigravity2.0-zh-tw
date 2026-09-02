@@ -38,6 +38,20 @@ if (ambiguousCaseCollisions.length) {
 }
 
 const normalizedOverrideCount = [...normalizedEntries.values()].filter((entries) => entries.length > 1).length;
+const skillDescriptionPath = path.join(dictDir, 'skill_descriptions.json');
+const skillDescriptions = JSON.parse(fs.readFileSync(skillDescriptionPath, 'utf8'));
+const skillDescriptionEntries = Object.entries(skillDescriptions);
+if (skillDescriptionEntries.length < 50) {
+    throw new Error(`技能與外掛程式說明翻譯不完整：預期至少 50 筆，實際為 ${skillDescriptionEntries.length} 筆`);
+}
+const invalidSkillDescriptions = skillDescriptionEntries.filter(([source, translation]) => (
+    typeof translation !== 'string'
+    || !/[\u3400-\u9fff]/u.test(translation)
+    || normalizeText(source) === normalizeText(translation)
+));
+if (invalidSkillDescriptions.length) {
+    throw new Error(`技能與外掛程式說明含未完整翻譯：${JSON.stringify(invalidSkillDescriptions.map(([source]) => source))}`);
+}
 const expected = {
     Antigravity: 'Antigravity',
     Projects: '專案',
@@ -47,6 +61,11 @@ const expected = {
     Models: '模型',
     System: '跟隨系統',
     'Install IDE': '安裝 IDE',
+    'Inherit General': '沿用「一般」設定',
+    'Inherits your General settings when working in this project.': '在此專案中工作時，沿用你的「一般」設定。',
+    Rules: '規則',
+    'Core tools and knowledge required to develop for Android': 'Android 開發所需的核心工具與知識',
+    'Curated collection of agent skills for science tasks.': '精選的科學任務 Agent 技能集。',
     'Ask anything, @ to mention, / for actions': '輸入訊息；@ 可提及項目，/ 可選擇操作',
     Sidebar: '側邊欄',
     'Project options': '專案選項',
