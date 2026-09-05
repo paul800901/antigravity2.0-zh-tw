@@ -220,6 +220,7 @@ function generateJs() {
             const quotaRefreshMatch = valNorm.match(/^You have used some of your (weekly|5-hour) limit, it will fully refresh in (\\d+) (day|days|hour|hours|minute|minutes)(?:, (\\d+) (hour|hours|minute|minutes))?\\.$/);
             const showBreakdownsMatch = valNorm.match(/^Show (\\d+) breakdowns$/);
             const skillsTokensMatch = valNorm.match(/^Skills: ([\\d,]+) tokens$/);
+            const modifiedProjectsMatch = valNorm.match(/^Modified in (\\d+) projects?$/);
             if (deleteProjectMatch) {
                 newVal = '永久刪除 ' + deleteProjectMatch[1] + '，包括 ' + deleteProjectMatch[2] + ' 個進行中對話以及 ' + deleteProjectMatch[3] + ' 個已封存對話。';
             } else if (thoughtDurationMatch) {
@@ -243,6 +244,8 @@ function generateJs() {
                 newVal = '顯示 ' + showBreakdownsMatch[1] + ' 項明細';
             } else if (skillsTokensMatch) {
                 newVal = '技能：' + skillsTokensMatch[1] + ' 個 Token';
+            } else if (modifiedProjectsMatch) {
+                newVal = '已在 ' + modifiedProjectsMatch[1] + ' 個專案中修改';
             } else {
                 const deleteProjectPrefixMatch = valNorm.match(/^Permanently delete (.+)$/);
                 const activeConversationsMatch = valNorm.match(/^(\\d+) active conversations?$/);
