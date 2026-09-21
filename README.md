@@ -1,8 +1,8 @@
 # Antigravity 2.0 繁體中文套件
 
-將 Antigravity 2.0 的介面翻譯為台灣繁體中文。v1.1.0 已在 Windows 與 Antigravity 2.11.0 完成實機驗證，提供本機安裝、備份與還原功能。
+將 Antigravity 2.0 的介面翻譯為台灣繁體中文。v1.2.0 已在 Windows 與 Antigravity 2.15.1 完成實機驗證，提供本機安裝、官方更新後自動重套、備份與還原功能。
 
-Antigravity 2.0 Traditional Chinese Localization Toolkit is an open-source, community-maintained project for Taiwan Traditional Chinese. It unpacks and repacks the local Electron ASAR file without redistributing official Antigravity files. Translation is limited to recognized interface strings; user messages, assistant responses, editable values, code, terminals, and debug output are excluded. Version 1.1.0 was tested on Antigravity 2.11.0 for Windows.
+Antigravity 2.0 Traditional Chinese Localization Toolkit is an open-source, community-maintained project for Taiwan Traditional Chinese. It unpacks and repacks the local Electron ASAR file without redistributing official Antigravity files. Translation is limited to recognized interface strings; user messages, assistant responses, editable values, code, terminals, and debug output are excluded. Version 1.2.0 was tested on Antigravity 2.15.1 for Windows.
 
 ---
 
@@ -10,7 +10,7 @@ Antigravity 2.0 Traditional Chinese Localization Toolkit is an open-source, comm
 
 **Antigravity 2.0 繁體中文套件**是一套開源的介面本地化工具，透過 ASAR 解包與重新打包機制，將 Antigravity 2.0 的英文介面翻譯為繁體中文。
 
-目前驗證基準為 **Antigravity 2.11.0（Windows）**。官方軟體更新後，請先確認相容性再重新安裝本套件。
+目前驗證基準為 **Antigravity 2.15.1（Windows）**。Windows 可安裝背景維護器，在官方更新後自動重新套用已確認的翻譯；不認識的新英文會保留原文。
 
 - 不修改官方核心二進位檔案
 - 不散布官方 `app.asar` 或任何官方檔案
@@ -56,6 +56,7 @@ npm install
 - 🌐 **繁體中文介面**：涵蓋主介面、設定頁、Agent 管理、MCP／知識庫頁面等多個區域
 - 🖥️ **跨平台支援**：同時支援 Windows 與 macOS
 - 🔧 **一鍵安裝**：雙擊腳本即可完成安裝，無需手動操作
+- ♻️ **更新後自動重套**：Windows 背景維護器在官方更新後安全恢復已確認的翻譯
 - 🔄 **完整還原**：隨時可還原為官方英文原版
 - 🛡️ **安全備份**：首次安裝時自動備份官方 `app.asar`
 - 📦 **離線運作**：使用本地 `@electron/asar`，不依賴 `npx` 動態下載
@@ -65,20 +66,28 @@ npm install
 
 ---
 
-## 重要提醒：官方軟體更新後須重新安裝
+## 官方更新後自動恢復繁中（Windows）
 
-> ⚠️ **每次 Antigravity 官方釋出更新後，繁體中文介面可能會消失。這是正常現象。**
+Antigravity 官方更新會重新覆蓋 `app.asar`。v1.2.0 提供 Windows 背景維護器，每分鐘及登入 Windows 時檢查一次：
 
-Antigravity 官方更新時，會重新覆蓋 `app.asar` 檔案，導致先前注入的繁體中文本地化內容被移除。
+- 已套用繁中：不做任何修改。
+- 發現相容的官方新版：若 Antigravity 使用中則延後；程式關閉後自動備份該版官方原檔並重新套用繁中。
+- 發現未知新版結構：停止修改、保留官方英文版並留下狀態紀錄，等待人工更新維護器。
+- 新增但字典尚未收錄的英文：保留英文，不進行機器翻譯。
 
-**這是正常情況，並非套件故障。**
+安裝背景維護器：
 
-只要在更新後重新執行安裝腳本，即可恢復繁體中文介面：
+```powershell
+powershell -ExecutionPolicy Bypass -File .\install-auto-maintainer.ps1
+```
 
-- **Windows**：雙擊執行 `install-win.bat`
-- **macOS**：雙擊執行 `install-macos.command`
+狀態與紀錄位於 `%LOCALAPPDATA%\AntigravityZhTW\`。移除背景維護器（不會還原或刪除現有繁中）：
 
-> 💡 建議在每次 Antigravity 更新完成後，養成重新執行安裝腳本的習慣。
+```powershell
+powershell -ExecutionPolicy Bypass -File .\uninstall-auto-maintainer.ps1
+```
+
+macOS 或未安裝背景維護器時，官方更新後仍可重新執行 `install-win.bat` 或 `install-macos.command`。
 
 ---
 
@@ -87,7 +96,7 @@ Antigravity 官方更新時，會重新覆蓋 `app.asar` 檔案，導致先前�
 | 平台 | 安裝 | 還原 | UI 驗證 | 備註 |
 |------|------|------|---------|------|
 | macOS | ⚠️ 未重測 | ⚠️ 未重測 | ⚠️ 未重測 | v1.1.0 尚未重新進行 macOS 實機驗證 |
-| Windows | ✅ 已通過 | ✅ 備份可用 | ✅ 已通過 | Antigravity 2.11.0 實機驗證完成 |
+| Windows | ✅ 已通過 | ✅ 備份可用 | ✅ 已通過 | Antigravity 2.15.1 實機驗證完成，支援背景維護器 |
 
 > 翻譯範圍持續補齊中。若在使用過程中發現未翻譯的文字，歡迎回報。
 
@@ -342,9 +351,11 @@ Antigravity 官方更新時，會重新覆蓋 `app.asar` 檔案，導致先前�
 
 解決方式：
 
-1. 完全退出 Antigravity
-2. 重新執行安裝腳本（Windows：`install-win.bat`；macOS：`install-macos.command`）
-3. 重新啟動 Antigravity，即可恢復繁體中文介面
+1. Windows 已安裝背景維護器：完全退出 Antigravity，維護器會在一分鐘內自動重新套用；下次開啟即恢復繁中。
+2. Windows 未安裝背景維護器：執行 `install-auto-maintainer.ps1`，或手動執行 `install-win.bat`。
+3. macOS：完全退出 Antigravity，再執行 `install-macos.command`。
+
+如果 `%LOCALAPPDATA%\AntigravityZhTW\state.json` 顯示 `blocked_incompatible`，代表官方改變了程式結構。維護器會保留英文版而不強行修改，需先更新本專案。
 </details>
 
 <details>
@@ -376,7 +387,7 @@ Windows 執行 `restore-win.bat`、macOS 執行 `restore-macos.command`，或使
 ## 注意事項
 
 1. **請先退出 Antigravity 再操作**：執行安裝或還原腳本前，請確認已完全退出 Antigravity，避免檔案被占用。
-2. **Antigravity 更新後需重新套用**：官方更新會覆蓋 `app.asar`，更新後請重新執行安裝腳本。
+2. **官方更新後的處理**：已安裝 Windows 背景維護器時，關閉 Antigravity 後會自動重套；否則需手動執行安裝腳本。
 3. **macOS Gatekeeper**：首次執行 `.command` 檔案時，若系統提示「無法驗證開發者」，請在 Finder 中對檔案按右鍵 → 開啟。
 4. **Windows 權限**：若出現「存取被拒」，請對 `.bat` 檔案按右鍵 → **以系統管理員身份執行**。
 5. **不要以 sudo 執行**：本套件不會自動使用 `sudo`，也不建議以 root 身份執行腳本。
