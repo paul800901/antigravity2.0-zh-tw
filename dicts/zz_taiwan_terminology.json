@@ -52,6 +52,8 @@
   "License": "授權",
   "New Window": "開新視窗",
   "Command Palette": "指令選擇區",
+  "Connect to WSL": "連線至 WSL",
+  "Reopen Locally": "在本地端重新開啟",
 
   "Agents": "Agent",
   "Agent": "Agent",

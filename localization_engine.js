@@ -536,11 +536,22 @@ function cleanMenuJsContent(content) {
         let endIdx = -1;
         let endMarkUsed = '';
 
-        for (const endMark of endMarks) {
-            const idx = cleaned.indexOf(endMark, startIdx);
-            if (idx !== -1 && (endIdx === -1 || idx < endIdx)) {
+        if (startMark === '/* --- MENU TRANSLATION START --- */') {
+            const endSign = '/* --- MENU TRANSLATION END --- */';
+            const idx = cleaned.indexOf(endSign, startIdx);
+            if (idx !== -1) {
                 endIdx = idx;
-                endMarkUsed = endMark;
+                endMarkUsed = endSign;
+            }
+        }
+
+        if (endIdx === -1) {
+            for (const endMark of endMarks) {
+                const idx = cleaned.indexOf(endMark, startIdx);
+                if (idx !== -1 && (endIdx === -1 || idx < endIdx)) {
+                    endIdx = idx;
+                    endMarkUsed = endMark;
+                }
             }
         }
 
@@ -569,7 +580,17 @@ function escapeRegExp(string) {
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-function closeAntigravityProcesses() {
+function closeAntigravityProcesses(options = {}) {
+    if (options && (options.skipKill || options.noKill)) {
+        console.log('[略過] 已指定略過關閉程序，不中斷 Antigravity。');
+        return;
+    }
+
+    if (process.env.ANTIGRAVITY_AGENT || process.env.ANTIGRAVITY_LS_ADDRESS) {
+        console.log('[跳過] 偵測到正在 Antigravity Agent 環境中執行，略過關閉程序以保持連線。');
+        return;
+    }
+
     console.log('[1] 正在關閉 Antigravity，以避免檔案被占用...');
 
     try {
@@ -640,7 +661,7 @@ function createMenuTranslationPatch() {
         'Help': '說明',
         'New Window': '新增視窗',
         'Create Project': '建立專案',
-        'Command Palette': '命令選擇區',
+        'Command Palette': '指令選擇區',
         'Docs': '使用說明',
         'Check for Updates': '檢查更新',
         'Toggle Developer Tools': '切換開發者工具',
@@ -672,10 +693,13 @@ function createMenuTranslationPatch() {
         'Speech': '語音',
         'Start Speaking': '開始朗讀',
         'Stop Speaking': '停止朗讀',
-        'Close Window': '關閉視窗'
+        'Close Window': '關閉視窗',
+        'Connect to WSL': '連線至 WSL',
+        'Reopen Locally': '在本地端重新開啟'
     };
 
     function translateMenu(items) {
+        if (!items) return;
         for (const item of items) {
             const label = item.label || '';
             let cleanLabel = label;
@@ -700,6 +724,17 @@ function createMenuTranslationPatch() {
     }
 
     translateMenu(menu.items);
+
+    if (!electron_1.Menu.__antigravityZhPatched) {
+        electron_1.Menu.__antigravityZhPatched = true;
+        const _origSetApplicationMenu = electron_1.Menu.setApplicationMenu;
+        electron_1.Menu.setApplicationMenu = function(m) {
+            if (m && m.items) {
+                translateMenu(m.items);
+            }
+            return _origSetApplicationMenu.call(this, m);
+        };
+    }
     /* --- MENU TRANSLATION END --- */
     `;
 }
@@ -721,7 +756,7 @@ function createTrayCreatePatch() {
     /* --- TRAY TRANSLATION END --- */`;
 }
 
-function install20(resourcesDir) {
+function install20(resourcesDir, options = {}) {
     const asarPath = path.join(resourcesDir, 'app.asar');
     const bakPath = path.join(resourcesDir, 'app.asar.bak');
 
@@ -735,10 +770,11 @@ function install20(resourcesDir) {
         return false;
     }
 
-    closeAntigravityProcesses();
+    closeAntigravityProcesses(options);
 
-    if (!fs.existsSync(bakPath)) {
-        console.log('[備份] 正在建立官方 app.asar 備份...');
+    const isOfficial = !fs.readFileSync(asarPath).includes(Buffer.from('ZH-HANT-TW'));
+    if (!fs.existsSync(bakPath) || isOfficial) {
+        console.log(fs.existsSync(bakPath) ? '[備份] 偵測到官方更新版本，更新官方 app.asar 備份...' : '[備份] 正在建立官方 app.asar 備份...');
         let backupOk = false;
         try {
             fs.copyFileSync(asarPath, bakPath);
@@ -768,7 +804,7 @@ function install20(resourcesDir) {
             console.log('[備份] 備份完成。');
         }
     } else {
-        console.log('[備份] 已存在 app.asar.bak，本次沿用既有備份。');
+        console.log('[備份] 已存在官方 app.asar.bak，本次沿用既有備份。');
     }
 
     const tempDir = path.join(__dirname, '_temp_asar');
@@ -838,24 +874,50 @@ function install20(resourcesDir) {
 
     const loadingPath = path.join(tempDir, 'dist', 'loadingOverlay.js');
     if (fs.existsSync(loadingPath)) {
-        console.log('[修改] 正在調整啟動畫面文字...');
         let loadingContent = fs.readFileSync(loadingPath, 'utf-8');
-
         const targetText = '<div class="text">Loading Antigravity</div>';
-        const replacementText = '<div class="text">正在啟動 Antigravity...</div>';
-        loadingContent = loadingContent.replace(targetText, replacementText);
+        if (loadingContent.includes(targetText)) {
+            console.log('[修改] 正在調整啟動畫面文字...');
+            const replacementText = '<div class="text">正在啟動 Antigravity...</div>';
+            loadingContent = loadingContent.replace(targetText, replacementText);
+            fs.writeFileSync(loadingPath, loadingContent, 'utf-8');
+            console.log('[修改] 啟動畫面文字調整完成。');
+        }
+    }
 
-        fs.writeFileSync(loadingPath, loadingContent, 'utf-8');
-        console.log('[修改] 啟動畫面文字調整完成。');
+    const provisionPath = path.join(tempDir, 'dist', 'provisionSplash.js');
+    if (fs.existsSync(provisionPath)) {
+        let provisionContent = fs.readFileSync(provisionPath, 'utf-8');
+        const targetSplash = '<div>Setting up WSL: ${escapeHtml(distro)}</div>';
+        if (provisionContent.includes(targetSplash)) {
+            console.log('[修改] 正在調整 WSL 設定畫面文字...');
+            const replacementSplash = '<div>正在設定 WSL：${escapeHtml(distro)}</div>';
+            provisionContent = provisionContent.replace(targetSplash, replacementSplash);
+            fs.writeFileSync(provisionPath, provisionContent, 'utf-8');
+            console.log('[修改] WSL 設定畫面文字調整完成。');
+        }
     }
 
     console.log('[打包] 正在重新打包 app.asar...');
-    const packRes = runAsarCommand('pack', [tempDir, asarPath]);
+    const tempAsarPath = path.join(resourcesDir, 'app.asar.tmp');
+    if (fs.existsSync(tempAsarPath)) {
+        try { fs.unlinkSync(tempAsarPath); } catch (e) {}
+    }
+    const packRes = runAsarCommand('pack', [tempDir, tempAsarPath]);
     fs.rmSync(tempDir, { recursive: true, force: true });
 
-    if (!packRes.success) {
+    if (!packRes.success || !fs.existsSync(tempAsarPath)) {
         console.error('[錯誤] 打包失敗。');
         console.error(`詳情：${packRes.stderr}\n${packRes.stdout}`);
+        if (fs.existsSync(tempAsarPath)) fs.unlinkSync(tempAsarPath);
+        return false;
+    }
+
+    try {
+        fs.copyFileSync(tempAsarPath, asarPath);
+        fs.unlinkSync(tempAsarPath);
+    } catch (err) {
+        console.error(`[錯誤] 覆寫 app.asar 失敗：${err.message}`);
         return false;
     }
 
@@ -863,7 +925,7 @@ function install20(resourcesDir) {
     return true;
 }
 
-function restore20(resourcesDir) {
+function restore20(resourcesDir, options = {}) {
     const asarPath = path.join(resourcesDir, 'app.asar');
     const bakPath = path.join(resourcesDir, 'app.asar.bak');
 
@@ -872,7 +934,7 @@ function restore20(resourcesDir) {
         return false;
     }
 
-    closeAntigravityProcesses();
+    closeAntigravityProcesses(options);
 
     console.log('[還原] 正在還原官方 app.asar...');
     fs.copyFileSync(bakPath, asarPath);
@@ -912,6 +974,7 @@ function printVersion() {
 function main() {
     let restore = false;
     let manualDir = '';
+    let skipKill = false;
 
     const args = process.argv.slice(2);
 
@@ -921,6 +984,8 @@ function main() {
         } else if (args[i] === '--install-dir') {
             manualDir = args[i + 1] || '';
             i++;
+        } else if (args[i] === '--skip-kill' || args[i] === '--no-kill') {
+            skipKill = true;
         } else if (args[i] === '--version' || args[i] === '-v') {
             printVersion();
             return;
@@ -945,10 +1010,10 @@ function main() {
 
     if (restore) {
         console.log(`====== 正在還原 ${PROJECT_NAME} ======`);
-        restore20(resourcesDir);
+        restore20(resourcesDir, { skipKill });
     } else {
         console.log(`====== 正在套用 ${PROJECT_NAME} ======`);
-        install20(resourcesDir);
+        install20(resourcesDir, { skipKill });
     }
 }
 
@@ -960,9 +1025,12 @@ module.exports = {
     cleanMenuJsContent,
     cleanTrayJsContent,
     createMenuTranslationPatch,
-    createTrayCreatePatch
+    createTrayCreatePatch,
+    install20,
+    restore20
 };
 
 if (require.main === module) {
     main();
 }
+

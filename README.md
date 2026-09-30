@@ -1,8 +1,8 @@
 # Antigravity 2.0 繁體中文套件
 
-將 Antigravity 2.0 的介面翻譯為台灣繁體中文。v1.1.0 已在 Windows 與 Antigravity 2.11.0 完成實機驗證，提供本機安裝、備份與還原功能。
+將 Antigravity 2.0 的介面翻譯為台灣繁體中文。v1.1.0 已在 Windows 與 Antigravity 2.18.1 完成實機驗證，提供本機安裝、備份與還原功能。
 
-Antigravity 2.0 Traditional Chinese Localization Toolkit is an open-source, community-maintained project for Taiwan Traditional Chinese. It unpacks and repacks the local Electron ASAR file without redistributing official Antigravity files. Translation is limited to recognized interface strings; user messages, assistant responses, editable values, code, terminals, and debug output are excluded. Version 1.1.0 was tested on Antigravity 2.11.0 for Windows.
+Antigravity 2.0 Traditional Chinese Localization Toolkit is an open-source, community-maintained project for Taiwan Traditional Chinese. It unpacks and repacks the local Electron ASAR file without redistributing official Antigravity files. Translation is limited to recognized interface strings; user messages, assistant responses, editable values, code, terminals, and debug output are excluded. Version 1.1.0 was tested on Antigravity 2.18.1 for Windows.
 
 ---
 
@@ -10,7 +10,7 @@ Antigravity 2.0 Traditional Chinese Localization Toolkit is an open-source, comm
 
 **Antigravity 2.0 繁體中文套件**是一套開源的介面本地化工具，透過 ASAR 解包與重新打包機制，將 Antigravity 2.0 的英文介面翻譯為繁體中文。
 
-目前驗證基準為 **Antigravity 2.11.0（Windows）**。官方軟體更新後，請先確認相容性再重新安裝本套件。
+目前驗證基準為 **Antigravity 2.18.1（Windows）**。官方軟體更新後，請先確認相容性再重新安裝本套件。
 
 - 不修改官方核心二進位檔案
 - 不散布官方 `app.asar` 或任何官方檔案
@@ -25,7 +25,7 @@ Antigravity 2.0 Traditional Chinese Localization Toolkit is an open-source, comm
 
 ## 畫面與驗證
 
-v1.1.0 已完成 Windows 實機啟動、主介面及設定頁詞句讀回。`images/` 內為舊版歷史畫面，不代表目前 v1.1.0 的最終詞句。
+v1.1.0 已完成 Windows 實機啟動、主介面及設定頁詞句讀回（Antigravity 2.18.1）。`images/` 內為舊版歷史畫面，不代表目前 v1.1.0 的最終詞句。
 
 ---
 
@@ -87,7 +87,7 @@ Antigravity 官方更新時，會重新覆蓋 `app.asar` 檔案，導致先前�
 | 平台 | 安裝 | 還原 | UI 驗證 | 備註 |
 |------|------|------|---------|------|
 | macOS | ⚠️ 未重測 | ⚠️ 未重測 | ⚠️ 未重測 | v1.1.0 尚未重新進行 macOS 實機驗證 |
-| Windows | ✅ 已通過 | ✅ 備份可用 | ✅ 已通過 | Antigravity 2.11.0 實機驗證完成 |
+| Windows | ✅ 已通過 | ✅ 備份可用 | ✅ 已通過 | Antigravity 2.18.1 實機驗證完成 |
 
 > 翻譯範圍持續補齊中。若在使用過程中發現未翻譯的文字，歡迎回報。
 
@@ -293,7 +293,7 @@ node localization_engine.js --restore
 | 啟動畫面文字 | 載入動畫文字 |
 | 鍵盤快捷鍵頁 | 快捷鍵描述與分類 |
 
-> 目前共 **617 個翻譯詞彙**。
+> 目前共 **758 個翻譯詞彙**。
 
 ### 不翻譯區域
 
