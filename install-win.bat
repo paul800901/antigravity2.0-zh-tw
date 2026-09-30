@@ -41,13 +41,16 @@ if not exist "%~dp0node_modules\@electron\asar\bin\asar.js" (
 echo [前置檢查] Node.js 與 asar CLI 均已就緒。
 echo.
 
-echo [1/3] 正在偵測並關閉 Antigravity 程序...
-taskkill /f /im Antigravity.exe /t >nul 2>nul
-timeout /t 2 /nobreak >nul
+echo [1/3] 安裝為一次性手動操作；未指定 --skip-kill 時會關閉 Antigravity。
 
 echo.
 echo [2/3] 正在套用繁體中文台灣用語本地化...
 node "%~dp0localization_engine.js" %*
+if errorlevel 1 (
+    echo [錯誤] 套用失敗，請保留上方訊息供檢查。
+    pause
+    exit /b 1
+)
 
 echo.
 echo [3/3] 套用完成！
@@ -55,3 +58,4 @@ echo.
 echo [注意] 請手動重新啟動 Antigravity 以生效。
 echo.
 pause
+exit /b 0

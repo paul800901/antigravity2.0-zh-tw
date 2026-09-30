@@ -29,13 +29,16 @@ if errorlevel 1 (
 echo [前置檢查] Node.js 已就緒。
 echo.
 
-echo [1/3] 正在偵測並關閉 Antigravity 程序...
-taskkill /f /im Antigravity.exe /t >nul 2>nul
-timeout /t 2 /nobreak >nul
+echo [1/3] 還原為一次性手動操作；未指定 --skip-kill 時會關閉 Antigravity。
 
 echo.
 echo [2/3] 正在還原官方原版檔案...
 node "%~dp0localization_engine.js" --huifu %*
+if errorlevel 1 (
+    echo [錯誤] 還原失敗，請保留上方訊息供檢查。
+    pause
+    exit /b 1
+)
 
 echo.
 echo [3/3] 還原完成！
@@ -43,3 +46,4 @@ echo.
 echo [注意] Antigravity 已成功還原為官方英文原版狀態。
 echo.
 pause
+exit /b 0

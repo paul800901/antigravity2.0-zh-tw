@@ -8,6 +8,8 @@ node_modules/
 # ASAR 工作暫存目錄
 _temp_asar/
 _verify_asar/
+_verify_asar-*/
+.zh-tw-work-*/
 
 # ASAR 檔案（不散布官方檔案）
 app.asar

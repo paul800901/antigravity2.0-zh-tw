@@ -16,6 +16,7 @@ Antigravity 2.0 Traditional Chinese Localization Toolkit is an open-source, comm
 - 不散布官方 `app.asar` 或任何官方檔案
 - 支援一鍵安裝與完整還原
 - 所有操作在使用者本機端執行
+- 方案 A：由使用者明確執行才更新，執行後立即結束；沒有背景服務、排程、登入自動啟動或常駐更新器
 - 僅翻譯明確的介面詞句，不對任意內容做片段取代
 - 保護使用者訊息、Agent 回應、程式碼、終端機與可編輯內容
 
@@ -26,6 +27,15 @@ Antigravity 2.0 Traditional Chinese Localization Toolkit is an open-source, comm
 ## 畫面與驗證
 
 v1.1.0 已完成 Windows 實機啟動、主介面及設定頁詞句讀回（Antigravity 2.18.1）。`images/` 內為舊版歷史畫面，不代表目前 v1.1.0 的最終詞句。
+
+2026-09-30 使用實際 Windows UI 逐頁檢查後補譯，並重新套用、重啟複查：
+
+- 主畫面配額通知、模型選單與用量子選單、專案／執行環境選單、斜線指令說明。
+- 一般、應用程式、外觀、模型、自訂項目、專案、瀏覽器及快速鍵頁；技能清單逐段捲動至底，補上五項新版技能說明。
+- 對話記錄的搜尋／顯示／篩選、排程任務空白頁與新增表單、指令／檔案搜尋、標題列選單及權限繼承說明。
+- 外觀程式預覽的 `name` 保持原文；程式碼與輸入值不參與翻譯。未建立排程、送出訊息、變更模型或權限。
+
+未觸發登入、付費、遠端操作、破壞性確認或所有錯誤狀態，也未重測 macOS；這次 UI 驗證不代表所有可能出現的英文均已覆蓋。產品名稱、技能識別碼、指令名稱與使用者內容可保留英文。
 
 ---
 
@@ -79,6 +89,22 @@ Antigravity 官方更新時，會重新覆蓋 `app.asar` 檔案，導致先前�
 - **macOS**：雙擊執行 `install-macos.command`
 
 > 💡 建議在每次 Antigravity 更新完成後，養成重新執行安裝腳本的習慣。
+
+### 手動更新的實際流程（方案 A）
+
+1. 官方更新導致繁中消失後，使用者自行執行本套件；工具不會在背景檢查或自行啟動。
+2. 套用時備份目前版本的官方原檔。如果原有備份屬於舊版，會另存為 `app.asar.<時間戳>.bak`，不直接丟棄。
+3. 先打包及檢查程式碼，再以同磁碟檔案替換方式更新 `app.asar`；保留官方 `app.asar.unpacked` 配置。失敗時回傳錯誤，不顯示假成功。
+4. 使用者自行重新啟動 Antigravity。字典沒有收錄的新英文維持原文，再由維護者補譯。
+
+預設的一鍵工具會在使用者執行時關閉 Antigravity。若由 Antigravity 自己的 Agent 執行，或不希望中斷目前對話，可改用：
+
+```bash
+node localization_engine.js --skip-kill
+# 或 install-win.bat --skip-kill
+```
+
+`--no-kill` 是相同選項。偵測到 `ANTIGRAVITY_AGENT` 或 `ANTIGRAVITY_LS_ADDRESS` 時也不會關閉程式。如果檔案被占用，工具會回報失敗而不強行中斷；請自行退出程式後重跑。工具不會自行關閉再重新開啟程式。
 
 ---
 
@@ -274,7 +300,7 @@ node localization_engine.js --restore
 node localization_engine.js --restore
 ```
 
-> 還原時，引擎會使用首次安裝時建立的 `app.asar.bak` 回復官方原版。還原完成後，備份檔會被移除。
+> 還原時，引擎會使用目前版本的 `app.asar.bak` 回復官方原版。還原完成後仍保留備份；若備份與目前版本不符，會停止還原，避免降回舊版。
 
 ---
 
@@ -293,7 +319,7 @@ node localization_engine.js --restore
 | 啟動畫面文字 | 載入動畫文字 |
 | 鍵盤快捷鍵頁 | 快捷鍵描述與分類 |
 
-> 目前共 **758 個翻譯詞彙**。
+> 目前共 **836 個翻譯詞彙**。
 
 ### 不翻譯區域
 

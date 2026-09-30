@@ -39,13 +39,15 @@ fi
 echo "[前置檢查] Node.js 與 asar CLI 均已就緒。"
 echo ""
 
-echo "[1/3] 正在偵測並關閉 Antigravity 程序..."
-pkill -f Antigravity > /dev/null 2>&1
-sleep 2
+echo "[1/3] 安裝為一次性手動操作；未指定 --skip-kill 時會關閉 Antigravity。"
 
 echo ""
 echo "[2/3] 正在套用繁體中文台灣用語本地化..."
-node localization_engine.js "$@"
+if ! node localization_engine.js "$@"; then
+    echo "[錯誤] 套用失敗，請保留上方訊息供檢查。"
+    read -r -p "按下 Enter 鍵結束..."
+    exit 1
+fi
 
 echo ""
 echo "[3/3] 套用完成！"
@@ -53,3 +55,4 @@ echo ""
 echo "[注意] 請手動重新啟動 Antigravity 以生效。"
 echo ""
 read -r -p "按下 Enter 鍵結束..."
+exit 0
