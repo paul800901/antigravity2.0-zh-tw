@@ -72,6 +72,27 @@ test('手動安裝、重複套用、官方更新備份及還原', async () => {
     assert.deepEqual(fs.readFileSync(item.backup), update.original);
 });
 
+test('2.19 工作列新增 onClick 參數，保留回呼及重複套用行為', async () => {
+    const item = await fixture('新版工作列', '2.19.1', {
+        files: { 'tray.js': 'function createTray(actions, onClick) { if (onClick) onClick(); return actions; }' }
+    });
+    for (let attempt = 0; attempt < 2; attempt++) {
+        assert.equal(engine.install20(item.resources, { skipKill: true }), true);
+        asar.uncacheAll();
+        const tray = asar.extractFile(item.archive, 'dist/tray.js').toString();
+        assert.equal(tray.split('TRAY TRANSLATION START').length - 1, 1);
+        assert.match(tray, /function createTray\(actions, onClick\)/);
+        const context = {};
+        vm.runInNewContext(tray, context);
+        let clicks = 0;
+        const actions = [{ label: 'Open Antigravity' }, { label: 'Quit' }, { label: 'Unknown New Feature' }];
+        assert.equal(context.createTray(actions, () => clicks++), actions);
+        assert.equal(clicks, 1);
+        assert.deepEqual(actions.map(item => item.label), ['開啟 Antigravity', '結束', 'Unknown New Feature']);
+        assert.deepEqual(fs.readFileSync(item.backup), item.original);
+    }
+});
+
 test('缺少官方備份時，不把已修改程式當成官方原檔', async () => {
     const item = await fixture('缺少備份', '2.18.1', {
         files: { 'preload.js': `globalThis.fixture = true;\n${engine.generateJs()}` }
@@ -84,6 +105,7 @@ test('缺少官方備份時，不把已修改程式當成官方原檔', async ()
 test('未知插入點或無效程式碼，不覆寫目前程式', async () => {
     for (const [name, files] of [
         ['未知選單', { 'menu.js': 'const newMenuStructure = true;' }],
+        ['未知工作列', { 'tray.js': 'function createNewTray(actions) { return actions; }' }],
         ['無效程式碼', { 'preload.js': 'const broken = ;' }]
     ]) {
         const item = await fixture(name, '2.18.1', { files });

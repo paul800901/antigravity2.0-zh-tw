@@ -831,8 +831,8 @@ function createMenuTranslationPatch() {
     `;
 }
 
-function createTrayCreatePatch() {
-    return `function createTray(actions) {
+function createTrayCreatePatch(signature = 'function createTray(actions) {') {
+    return `${signature}
     /* --- TRAY TRANSLATION START --- */
     const translations = {
         'No agents running': '目前沒有執行中的 Agent',
@@ -968,9 +968,11 @@ function install20(resourcesDir, options = {}) {
         const trayContent = fs.readFileSync(trayPath, 'utf-8');
         const trayCleaned = cleanTrayJsContent(trayContent);
 
-        const targetCreate = 'function createTray(actions) {';
-        const replacementCreate = createTrayCreatePatch();
-        if (!trayCleaned.includes(targetCreate)) throw new Error('找不到 tray.js 插入點，已停止修改官方檔案。');
+        // 2.19 新增 onClick 回呼，保留官方函式參數及原本的點擊處理。
+        const targetCreate = ['function createTray(actions) {', 'function createTray(actions, onClick) {']
+            .find(signature => trayCleaned.includes(signature));
+        if (!targetCreate) throw new Error('找不到 tray.js 插入點，已停止修改官方檔案。');
+        const replacementCreate = createTrayCreatePatch(targetCreate);
 
         let trayPatched = trayCleaned.replace(targetCreate, replacementCreate);
 
