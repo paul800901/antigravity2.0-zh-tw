@@ -224,6 +224,7 @@ test('UI 實際發現的配額、拆分說明與程式預覽回歸', () => {
 test('不認得的參數直接拒絕，不會誤跑安裝', () => {
     assert.throws(() => engine.parseArgs(['--dry-run']), /不認得的參數/);
     assert.throws(() => engine.parseArgs(['--install-dir']), /--install-dir/);
+    assert.throws(() => engine.parseArgs(['--install-dir', '--restore']), /--install-dir/);
     assert.deepEqual(engine.parseArgs(['--restore', '--install-dir', 'D:/Antigravity', '--skip-kill']), {
         restore: true, manualDir: 'D:/Antigravity', skipKill: true, version: false,
     });

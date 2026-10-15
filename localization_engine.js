@@ -886,16 +886,13 @@ function install20(resourcesDir, options = {}) {
             fs.renameSync(bakPath, oldBackup);
             console.log(`[備份] 舊版原檔已保留：${oldBackup}`);
         }
-        let backupOk = false;
         try {
             fs.copyFileSync(asarPath, bakPath);
-            backupOk = true;
         } catch (copyErr) {
             if ((copyErr.code === 'EPERM' || copyErr.code === 'EACCES') && process.platform !== 'win32') {
                 console.warn(`[備份] fs.copyFileSync 失敗 (${copyErr.code})，嘗試以 /bin/cp -p 建立備份...`);
                 const cpResult = runCommandSync(`/bin/cp -p "${asarPath}" "${bakPath}"`);
                 if (cpResult.success && fs.existsSync(bakPath)) {
-                    backupOk = true;
                     console.log('[備份] 以 /bin/cp -p 建立備份成功。');
                 } else {
                     console.error('[錯誤] 備份失敗：無法建立 app.asar.bak。');
@@ -911,9 +908,7 @@ function install20(resourcesDir, options = {}) {
                 return false;
             }
         }
-        if (backupOk) {
-            console.log('[備份] 備份完成。');
-        }
+        console.log('[備份] 備份完成。');
     } else {
         console.log('[備份] 已存在官方 app.asar.bak，本次沿用既有備份。');
     }
@@ -1116,7 +1111,7 @@ function parseArgs(args) {
         if (args[i] === '--huifu' || args[i] === '--restore') {
             options.restore = true;
         } else if (args[i] === '--install-dir') {
-            if (!args[i + 1]) {
+            if (!args[i + 1] || args[i + 1].startsWith('-')) {
                 throw new Error('--install-dir 後面需要安裝資料夾路徑');
             }
             options.manualDir = args[i + 1];
