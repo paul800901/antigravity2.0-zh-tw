@@ -8,8 +8,7 @@
     "test": "node --test test-localization-engine.js",
     "version": "node localization_engine.js --version",
     "install:localization": "node localization_engine.js",
-    "restore": "node localization_engine.js --restore",
-    "release:package": "node scripts/create-release-package.js"
+    "restore": "node localization_engine.js --restore"
   },
   "dependencies": {
     "@electron/asar": "^3.3.1"

@@ -1109,26 +1109,43 @@ function printVersion() {
     console.log(`Signature: ${SIGNATURE}`);
 }
 
-function main() {
-    let restore = false;
-    let manualDir = '';
-    let skipKill = false;
-
-    const args = process.argv.slice(2);
-
+// Unknown options are rejected: running the installer by mistake modifies the installed app.
+function parseArgs(args) {
+    const options = { restore: false, manualDir: '', skipKill: false, version: false };
     for (let i = 0; i < args.length; i++) {
         if (args[i] === '--huifu' || args[i] === '--restore') {
-            restore = true;
+            options.restore = true;
         } else if (args[i] === '--install-dir') {
-            manualDir = args[i + 1] || '';
+            if (!args[i + 1]) {
+                throw new Error('--install-dir 後面需要安裝資料夾路徑');
+            }
+            options.manualDir = args[i + 1];
             i++;
         } else if (args[i] === '--skip-kill' || args[i] === '--no-kill') {
-            skipKill = true;
+            options.skipKill = true;
         } else if (args[i] === '--version' || args[i] === '-v') {
-            printVersion();
-            return;
+            options.version = true;
+        } else {
+            throw new Error(`不認得的參數：${args[i]}。可用：--restore、--install-dir <路徑>、--skip-kill、--version`);
         }
     }
+    return options;
+}
+
+function main() {
+    let options;
+    try {
+        options = parseArgs(process.argv.slice(2));
+    } catch (error) {
+        console.error(`[錯誤] ${error.message}`);
+        process.exitCode = 2;
+        return;
+    }
+    if (options.version) {
+        printVersion();
+        return;
+    }
+    const { restore, manualDir, skipKill } = options;
 
     const installDir = detectInstallationDir(manualDir);
     const resourcesDir = locateResourcesDir(installDir);
@@ -1156,6 +1173,7 @@ function main() {
 }
 
 module.exports = {
+    parseArgs,
     normalizeText,
     loadDictionary,
     generateJs,

@@ -394,7 +394,7 @@ Windows 執行 `restore-win.bat`、macOS 執行 `restore-macos.command`，或使
 <details>
 <summary><strong>為什麼 PROJECT_ID / SIGNATURE 還是 zh-hant-tw？</strong></summary>
 
-`PROJECT_ID`（`antigravity2-zh-hant-tw`）與 `SIGNATURE`（`ZH-HANT-TW`）作為內部技術識別碼，用於套件名稱與注入區塊的清理邏輯。若變更這些識別碼，會導致舊版注入區塊無法被正確清理。因此保留原有識別碼以維持向下相容。
+`PROJECT_ID`（`antigravity2-zh-hant-tw`）與 `SIGNATURE`（`ZH-HANT-TW`）是內部技術識別碼，目前只出現在 `--version` 的版本資訊；清理舊注入區塊使用的是另一組開始／結束標記。保留原名是為了讓舊版使用者辨認同一個套件。
 </details>
 
 ---
