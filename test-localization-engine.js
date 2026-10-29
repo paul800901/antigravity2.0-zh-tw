@@ -193,6 +193,11 @@ test('UI 實際發現的配額、拆分說明與程式預覽回歸', () => {
     assert.equal(translateString('9:00 AM'), '上午 9:00');
     assert.equal(translateString('Version 2.18.1'), '版本 2.18.1');
     assert.equal(translateString('Toggle Science'), '切換科學研究');
+    assert.equal(translateString('Worked for 3m'), '處理了 3 分鐘');
+    assert.equal(translateString('29d ago'), '29 天前');
+    assert.equal(translateString('1 file changed +7 -7'), '1 個檔案已變更 +7 -7');
+    assert.equal(translateString('Automations'), '自動化');
+    assert.equal(translateString('Background Commands'), '背景指令');
     for (const unknown of ['Unknown New Feature', 'Toggle Unknown New Feature', 'User quoted Name in a sentence']) {
         assert.equal(translateString(unknown), unknown);
     }

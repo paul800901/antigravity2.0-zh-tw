@@ -245,7 +245,9 @@ function generateJs() {
         if (newVal === originalVal) {
             const deleteProjectMatch = valNorm.match(/^Permanently delete (.+?) including (\\d+) active conversations? and (\\d+) archived conversations?\\.$/);
             const thoughtDurationMatch = valNorm.match(/^Thought for (\\d+(?:\\.\\d+)?)s$/);
-            const workedDurationMatch = valNorm.match(/^Worked for (\\d+(?:\\.\\d+)?)s$/);
+            const workedDurationMatch = valNorm.match(/^Worked for (\\d+(?:\\.\\d+)?)(s|m|h)(?: (\\d+)(s|m))?$/);
+            const compactAgoMatch = valNorm.match(/^(\\d+)(mo|s|m|h|d|w|y) ago$/);
+            const filesChangedMatch = valNorm.match(/^(\\d+) files? changed( \\+\\d+ -\\d+)?$/);
             const currentModelMatch = valNorm.match(/^Select model, current: (.+)$/);
             const compactAgeMatch = valNorm.match(/^(\\d+)(mo|s|m|h|d|w|y)$/);
             const customizationBudgetMatch = valNorm.match(/^(\\d+(?:\\.\\d+)?)% of the customization budget is available\\.$/);
@@ -265,7 +267,14 @@ function generateJs() {
             } else if (thoughtDurationMatch) {
                 newVal = '思考了 ' + thoughtDurationMatch[1] + ' 秒';
             } else if (workedDurationMatch) {
-                newVal = '處理了 ' + workedDurationMatch[1] + ' 秒';
+                const durationUnits = { s: ' 秒', m: ' 分鐘', h: ' 小時' };
+                newVal = '處理了 ' + workedDurationMatch[1] + (durationUnits[workedDurationMatch[2]] || ' 秒');
+                if (workedDurationMatch[3]) newVal += ' ' + workedDurationMatch[3] + (durationUnits[workedDurationMatch[4]] || ' 分鐘');
+            } else if (compactAgoMatch) {
+                const ageUnits = { s: ' 秒', m: ' 分鐘', h: ' 小時', d: ' 天', w: ' 週', mo: ' 個月', y: ' 年' };
+                newVal = compactAgoMatch[1] + ageUnits[compactAgoMatch[2]] + '前';
+            } else if (filesChangedMatch) {
+                newVal = filesChangedMatch[1] + ' 個檔案已變更' + (filesChangedMatch[2] || '');
             } else if (currentModelMatch) {
                 newVal = '選擇模型，目前使用：' + currentModelMatch[1];
             } else if (compactAgeMatch) {
@@ -1020,8 +1029,17 @@ function install20(resourcesDir, options = {}) {
     if (!packedPreload.endsWith(translationJs) || packedPreload.split(SIGNATURE_START).length !== 2) {
         throw new Error('打包後的繁中注入不正確，已保留原本的 app.asar。');
     }
-    // 同磁碟 rename 真正替換檔案；失敗時不會截斷原檔。
-    fs.renameSync(tempAsarPath, asarPath);
+    // 同磁碟 rename 真正替換檔案；若因檔案被占用導致 EPERM/EBUSY 則 fallback 至 copyFileSync。
+    try {
+        fs.renameSync(tempAsarPath, asarPath);
+    } catch (renameErr) {
+        if ((renameErr.code === 'EPERM' || renameErr.code === 'EBUSY') && process.platform === 'win32') {
+            console.log('[替換] rename 被系統鎖定，改用 copyFileSync 覆寫 app.asar...');
+            fs.copyFileSync(tempAsarPath, asarPath);
+        } else {
+            throw renameErr;
+        }
+    }
 
     console.log(`[完成] ${PROJECT_NAME} 已套用完成。`);
     return true;
@@ -1061,7 +1079,16 @@ function restore20(resourcesDir, options = {}) {
         tempDir = fs.mkdtempSync(path.join(resourcesDir, '.zh-tw-work-'));
         const prepared = path.join(tempDir, 'app.asar');
         fs.copyFileSync(bakPath, prepared);
-        fs.renameSync(prepared, asarPath);
+        try {
+            fs.renameSync(prepared, asarPath);
+        } catch (renameErr) {
+            if ((renameErr.code === 'EPERM' || renameErr.code === 'EBUSY') && process.platform === 'win32') {
+                console.log('[替換] rename 被系統鎖定，改用 copyFileSync 還原 app.asar...');
+                fs.copyFileSync(prepared, asarPath);
+            } else {
+                throw renameErr;
+            }
+        }
         console.log('[完成] 官方 app.asar 已還原，官方備份繼續保留。');
         return true;
     } catch (error) {

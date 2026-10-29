@@ -71,5 +71,7 @@
   "Select Project": "選擇專案",
   "Toggle Science": "切換科學研究",
   "Inherits your Global Permissions when working in this project.": "在此專案中工作時，沿用你的全域權限設定。",
-  "Remove": "移除"
+  "Remove": "移除",
+  "Automations": "自動化",
+  "Background Commands": "背景指令"
 }
